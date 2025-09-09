@@ -1,0 +1,24 @@
+# Demo: Korrel8r Log Correlation Examples
+# This shows practical logging scenarios
+
+# Example 1: Find all logs from a problematic pod
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: korrel8r-log-queries
+data:
+  # Query logs from a specific pod
+  pod-to-logs: |
+    log:infrastructure:{namespace: openshift-ai-analyzer, name: cluster-selector-analyzer-57d76d8ddb-5mlwj}
+  
+  # Query logs from all pods in a namespace
+  namespace-logs: |
+    log:application:{kubernetes_namespace_name: openshift-ai-analyzer}
+  
+  # Find logs with specific error patterns
+  error-logs: |
+    log:application:{kubernetes_namespace_name: openshift-ai-analyzer} |= "ERROR"
+  
+  # Correlate pod failures with their logs
+  failed-pod-logs: |
+    log:infrastructure:{kubernetes_pod_name: "failed-pod"} | json | level="error"

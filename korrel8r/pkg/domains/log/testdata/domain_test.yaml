@@ -1,0 +1,529 @@
+'log:application:{log_type="application"}':
+  - _timestamp: "2025-09-05T20:36:56.316693133Z"
+    body: '{"@timestamp":"2025-09-05T20:36:56.316693133Z","hostname":"snoflake","kubernetes":{"annotations":{"k8s.ovn.org/pod-networks":"{\"default\":{\"ip_addresses\":[\"10.128.0.240/23\"],\"mac_address\":\"0a:58:0a:80:00:f0\",\"gateway_ips\":[\"10.128.0.1\"],\"routes\":[{\"dest\":\"10.128.0.0/14\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"172.30.0.0/16\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"169.254.0.5/32\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"100.64.0.0/16\",\"nextHop\":\"10.128.0.1\"}],\"ip_address\":\"10.128.0.240/23\",\"gateway_ip\":\"10.128.0.1\",\"role\":\"primary\"}}","k8s.v1.cni.cncf.io/network-status":"[{\n    \"name\":
+      \"ovn-kubernetes\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.240\"\n    ],\n    \"mac\":
+      \"0a:58:0a:80:00:f0\",\n    \"default\": true,\n    \"dns\": {}\n}]","openshift.io/scc":"restricted-v2","seccomp.security.alpha.kubernetes.io/pod":"runtime/default"},"container_id":"cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066","container_image":"ghcr.io/grafana/xk6-client-tracing:v0.0.5","container_iostream":"stdout","container_name":"k6-tracing","labels":{"app_kubernetes_io_name":"k6-tracing","pod-template-hash":"564cf6dc8b"},"namespace_id":"993dc0c1-0252-452c-a745-98254533c26d","namespace_labels":{"kubernetes_io_metadata_name":"tracing-app-k6","pod-security_kubernetes_io_audit":"restricted","pod-security_kubernetes_io_audit-version":"latest","pod-security_kubernetes_io_warn":"restricted","pod-security_kubernetes_io_warn-version":"latest"},"namespace_name":"tracing-app-k6","pod_id":"abd29057-82ba-4ad2-95a6-9f601e40076e","pod_ip":"10.128.0.240","pod_name":"k6-tracing-564cf6dc8b-dflgx","pod_owner":"ReplicaSet/k6-tracing-564cf6dc8b"},"level":"default","log_source":"container","log_type":"application","message":"","openshift":{"cluster_id":"e0717a97-390d-4a0f-88ac-87b273320f10","sequence":1757104646864777162}}'
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: ""
+    observed_timestamp: "2025-09-05T16:36:56.316693133-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646864777162"
+    timestamp: "2025-09-05T20:36:56.316693133Z"
+  - _timestamp: "2025-09-05T20:36:56.316693133Z"
+    body: default   [  46% ] 1 VUs  09m18.0s/20m0s
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: default   [  46% ] 1 VUs  09m18.0s/20m0s
+    observed_timestamp: "2025-09-05T16:36:56.316693133-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646864902606"
+    timestamp: "2025-09-05T20:36:56.316693133Z"
+  - _timestamp: "2025-09-05T20:36:56.316693133Z"
+    body: running (09m18.0s), 1/1 VUs, 183 complete and 0 interrupted iterations
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: running (09m18.0s), 1/1 VUs, 183 complete and 0 interrupted iterations
+    observed_timestamp: "2025-09-05T16:36:56.316693133-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646864841957"
+    timestamp: "2025-09-05T20:36:56.316693133Z"
+  - _timestamp: "2025-09-05T20:36:56.478045999Z"
+    body: Fri Sep  5 20:36:56 UTC 2025 chat says hello - 10320
+    hostname: snoflake
+    k8s_container_name: chat
+    k8s_namespace_name: chat
+    k8s_node_name: snoflake
+    k8s_pod_name: chat
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.200/23"],"mac_address":"0a:58:0a:80:00:c8","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.200/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.200"
+          ],
+          "mac": "0a:58:0a:80:00:c8",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_kubectl_kubernetes_io_last_applied_configuration: |
+      {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"app":"chat","test":"true"},"name":"chat","namespace":"chat"},"spec":{"containers":[{"command":["sh","-c","i=1; while true; do echo \"$(date) chat says hello - $i\"; i=$((i + 1)); sleep 1; done"],"image":"quay.io/libpod/alpine","name":"chat","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}}]}}
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://bcf13aee40cb38c13beb06effffad320abac387ca77427ac3230fe10b7defacf
+    kubernetes_container_image: quay.io/libpod/alpine
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: chat
+    kubernetes_container_name_extracted: chat
+    kubernetes_host: snoflake
+    kubernetes_labels_app: chat
+    kubernetes_labels_test: "true"
+    kubernetes_namespace_id: 3f4f8105-f844-4a0f-a485-d8425e6d0bf0
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: chat
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: chat
+    kubernetes_namespace_name_extracted: chat
+    kubernetes_pod_id: c607beee-cd2c-438c-a026-216e6332b23b
+    kubernetes_pod_ip: 10.128.0.200
+    kubernetes_pod_name: chat
+    kubernetes_pod_name_extracted: chat
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: Fri Sep  5 20:36:56 UTC 2025 chat says hello - 10320
+    observed_timestamp: "2025-09-05T16:36:56.478045999-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646861579838"
+    timestamp: "2025-09-05T20:36:56.478045999Z"
+  - _timestamp: "2025-09-05T20:36:57.316812068Z"
+    body: '{"@timestamp":"2025-09-05T20:36:57.316812068Z","hostname":"snoflake","kubernetes":{"annotations":{"k8s.ovn.org/pod-networks":"{\"default\":{\"ip_addresses\":[\"10.128.0.240/23\"],\"mac_address\":\"0a:58:0a:80:00:f0\",\"gateway_ips\":[\"10.128.0.1\"],\"routes\":[{\"dest\":\"10.128.0.0/14\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"172.30.0.0/16\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"169.254.0.5/32\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"100.64.0.0/16\",\"nextHop\":\"10.128.0.1\"}],\"ip_address\":\"10.128.0.240/23\",\"gateway_ip\":\"10.128.0.1\",\"role\":\"primary\"}}","k8s.v1.cni.cncf.io/network-status":"[{\n    \"name\":
+      \"ovn-kubernetes\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.240\"\n    ],\n    \"mac\":
+      \"0a:58:0a:80:00:f0\",\n    \"default\": true,\n    \"dns\": {}\n}]","openshift.io/scc":"restricted-v2","seccomp.security.alpha.kubernetes.io/pod":"runtime/default"},"container_id":"cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066","container_image":"ghcr.io/grafana/xk6-client-tracing:v0.0.5","container_iostream":"stdout","container_name":"k6-tracing","labels":{"app_kubernetes_io_name":"k6-tracing","pod-template-hash":"564cf6dc8b"},"namespace_id":"993dc0c1-0252-452c-a745-98254533c26d","namespace_labels":{"kubernetes_io_metadata_name":"tracing-app-k6","pod-security_kubernetes_io_audit":"restricted","pod-security_kubernetes_io_audit-version":"latest","pod-security_kubernetes_io_warn":"restricted","pod-security_kubernetes_io_warn-version":"latest"},"namespace_name":"tracing-app-k6","pod_id":"abd29057-82ba-4ad2-95a6-9f601e40076e","pod_ip":"10.128.0.240","pod_name":"k6-tracing-564cf6dc8b-dflgx","pod_owner":"ReplicaSet/k6-tracing-564cf6dc8b"},"level":"default","log_source":"container","log_type":"application","message":"","openshift":{"cluster_id":"e0717a97-390d-4a0f-88ac-87b273320f10","sequence":1757104646864961721}}'
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: ""
+    observed_timestamp: "2025-09-05T16:36:57.316812068-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646864961721"
+    timestamp: "2025-09-05T20:36:57.316812068Z"
+  - _timestamp: "2025-09-05T20:36:57.316812068Z"
+    body: default   [  47% ] 1 VUs  09m19.0s/20m0s
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: default   [  47% ] 1 VUs  09m19.0s/20m0s
+    observed_timestamp: "2025-09-05T16:36:57.316812068-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646865078404"
+    timestamp: "2025-09-05T20:36:57.316812068Z"
+  - _timestamp: "2025-09-05T20:36:57.316812068Z"
+    body: running (09m19.0s), 1/1 VUs, 183 complete and 0 interrupted iterations
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: running (09m19.0s), 1/1 VUs, 183 complete and 0 interrupted iterations
+    observed_timestamp: "2025-09-05T16:36:57.316812068-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646865027727"
+    timestamp: "2025-09-05T20:36:57.316812068Z"
+  - _timestamp: "2025-09-05T20:36:57.504494169Z"
+    body: Fri Sep  5 20:36:57 UTC 2025 chat says hello - 10321
+    hostname: snoflake
+    k8s_container_name: chat
+    k8s_namespace_name: chat
+    k8s_node_name: snoflake
+    k8s_pod_name: chat
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.200/23"],"mac_address":"0a:58:0a:80:00:c8","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.200/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.200"
+          ],
+          "mac": "0a:58:0a:80:00:c8",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_kubectl_kubernetes_io_last_applied_configuration: |
+      {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"app":"chat","test":"true"},"name":"chat","namespace":"chat"},"spec":{"containers":[{"command":["sh","-c","i=1; while true; do echo \"$(date) chat says hello - $i\"; i=$((i + 1)); sleep 1; done"],"image":"quay.io/libpod/alpine","name":"chat","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}}]}}
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://bcf13aee40cb38c13beb06effffad320abac387ca77427ac3230fe10b7defacf
+    kubernetes_container_image: quay.io/libpod/alpine
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: chat
+    kubernetes_container_name_extracted: chat
+    kubernetes_host: snoflake
+    kubernetes_labels_app: chat
+    kubernetes_labels_test: "true"
+    kubernetes_namespace_id: 3f4f8105-f844-4a0f-a485-d8425e6d0bf0
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: chat
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: chat
+    kubernetes_namespace_name_extracted: chat
+    kubernetes_pod_id: c607beee-cd2c-438c-a026-216e6332b23b
+    kubernetes_pod_ip: 10.128.0.200
+    kubernetes_pod_name: chat
+    kubernetes_pod_name_extracted: chat
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: Fri Sep  5 20:36:57 UTC 2025 chat says hello - 10321
+    observed_timestamp: "2025-09-05T16:36:57.504494169-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646861674651"
+    timestamp: "2025-09-05T20:36:57.504494169Z"
+  - _timestamp: "2025-09-05T20:36:57.510031281Z"
+    body: '{}'
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: '{}'
+    observed_timestamp: "2025-09-05T16:36:57.510031281-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646865117535"
+    timestamp: "2025-09-05T20:36:57.510031281Z"
+  - _timestamp: "2025-09-05T20:36:58.317328083Z"
+    body: '{"@timestamp":"2025-09-05T20:36:58.317328083Z","hostname":"snoflake","kubernetes":{"annotations":{"k8s.ovn.org/pod-networks":"{\"default\":{\"ip_addresses\":[\"10.128.0.240/23\"],\"mac_address\":\"0a:58:0a:80:00:f0\",\"gateway_ips\":[\"10.128.0.1\"],\"routes\":[{\"dest\":\"10.128.0.0/14\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"172.30.0.0/16\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"169.254.0.5/32\",\"nextHop\":\"10.128.0.1\"},{\"dest\":\"100.64.0.0/16\",\"nextHop\":\"10.128.0.1\"}],\"ip_address\":\"10.128.0.240/23\",\"gateway_ip\":\"10.128.0.1\",\"role\":\"primary\"}}","k8s.v1.cni.cncf.io/network-status":"[{\n    \"name\":
+      \"ovn-kubernetes\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.240\"\n    ],\n    \"mac\":
+      \"0a:58:0a:80:00:f0\",\n    \"default\": true,\n    \"dns\": {}\n}]","openshift.io/scc":"restricted-v2","seccomp.security.alpha.kubernetes.io/pod":"runtime/default"},"container_id":"cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066","container_image":"ghcr.io/grafana/xk6-client-tracing:v0.0.5","container_iostream":"stdout","container_name":"k6-tracing","labels":{"app_kubernetes_io_name":"k6-tracing","pod-template-hash":"564cf6dc8b"},"namespace_id":"993dc0c1-0252-452c-a745-98254533c26d","namespace_labels":{"kubernetes_io_metadata_name":"tracing-app-k6","pod-security_kubernetes_io_audit":"restricted","pod-security_kubernetes_io_audit-version":"latest","pod-security_kubernetes_io_warn":"restricted","pod-security_kubernetes_io_warn-version":"latest"},"namespace_name":"tracing-app-k6","pod_id":"abd29057-82ba-4ad2-95a6-9f601e40076e","pod_ip":"10.128.0.240","pod_name":"k6-tracing-564cf6dc8b-dflgx","pod_owner":"ReplicaSet/k6-tracing-564cf6dc8b"},"level":"default","log_source":"container","log_type":"application","message":"","openshift":{"cluster_id":"e0717a97-390d-4a0f-88ac-87b273320f10","sequence":1757104646865156183}}'
+    hostname: snoflake
+    k8s_container_name: k6-tracing
+    k8s_namespace_name: tracing-app-k6
+    k8s_node_name: snoflake
+    k8s_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_annotations_k8s_ovn_org_pod_networks: '{"default":{"ip_addresses":["10.128.0.240/23"],"mac_address":"0a:58:0a:80:00:f0","gateway_ips":["10.128.0.1"],"routes":[{"dest":"10.128.0.0/14","nextHop":"10.128.0.1"},{"dest":"172.30.0.0/16","nextHop":"10.128.0.1"},{"dest":"169.254.0.5/32","nextHop":"10.128.0.1"},{"dest":"100.64.0.0/16","nextHop":"10.128.0.1"}],"ip_address":"10.128.0.240/23","gateway_ip":"10.128.0.1","role":"primary"}}'
+    kubernetes_annotations_k8s_v1_cni_cncf_io_network_status: |-
+      [{
+          "name": "ovn-kubernetes",
+          "interface": "eth0",
+          "ips": [
+              "10.128.0.240"
+          ],
+          "mac": "0a:58:0a:80:00:f0",
+          "default": true,
+          "dns": {}
+      }]
+    kubernetes_annotations_openshift_io_scc: restricted-v2
+    kubernetes_annotations_seccomp_security_alpha_kubernetes_io_pod: runtime/default
+    kubernetes_container_id: cri-o://229b851e22522f2e28445cf6f5dd5719344fe8b8def14c5a76172d969c415066
+    kubernetes_container_image: ghcr.io/grafana/xk6-client-tracing:v0.0.5
+    kubernetes_container_iostream: stdout
+    kubernetes_container_name: k6-tracing
+    kubernetes_container_name_extracted: k6-tracing
+    kubernetes_host: snoflake
+    kubernetes_labels_app_kubernetes_io_name: k6-tracing
+    kubernetes_labels_pod_template_hash: 564cf6dc8b
+    kubernetes_namespace_id: 993dc0c1-0252-452c-a745-98254533c26d
+    kubernetes_namespace_labels_kubernetes_io_metadata_name: tracing-app-k6
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_audit_version: latest
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn: restricted
+    kubernetes_namespace_labels_pod_security_kubernetes_io_warn_version: latest
+    kubernetes_namespace_name: tracing-app-k6
+    kubernetes_namespace_name_extracted: tracing-app-k6
+    kubernetes_pod_id: abd29057-82ba-4ad2-95a6-9f601e40076e
+    kubernetes_pod_ip: 10.128.0.240
+    kubernetes_pod_name: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_name_extracted: k6-tracing-564cf6dc8b-dflgx
+    kubernetes_pod_owner: ReplicaSet/k6-tracing-564cf6dc8b
+    level: default
+    log_source: container
+    log_type: application
+    log_type_extracted: application
+    message: ""
+    observed_timestamp: "2025-09-05T16:36:58.317328083-04:00"
+    openshift_cluster_id: e0717a97-390d-4a0f-88ac-87b273320f10
+    openshift_log_type: application
+    openshift_sequence: "1757104646865156183"
+    timestamp: "2025-09-05T20:36:58.317328083Z"

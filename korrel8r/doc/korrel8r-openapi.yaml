@@ -1,0 +1,472 @@
+openapi: 3.0.1
+info:
+  title: Korrel8r REST API
+  description: Generate graphs showing correlations between resources and observability signals in a cluster.
+  contact:
+    name: Project Korrel8r
+    url: https://github.com/korrel8r/korrel8r
+  license:
+    name: Apache 2.0
+    url: https://github.com/korrel8r/korrel8r/blob/main/LICENSE
+  version: v1alpha1
+externalDocs:
+  url: https://korrel8r.github.io/korrel8r/
+  description: Korrel8r User Guide
+servers:
+  - url: /api/v1alpha1
+paths:
+  /config:
+    put:
+      summary: Change configuration settings at runtime.
+      description: >
+        Modify selected configuration settings (e.g. log verbosity) on a running service.
+      operationId: setConfig
+      tags: [configure]
+      parameters:
+        - name: verbose
+          in: query
+          description: Verbose setting for logging.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+      responses:
+        "200":
+          description: OK
+
+  /domains:
+    get:
+      summary: Get the list of correlation domains.
+      description: >
+        Returns a list of Korrel8r domains and the stores configured for each domain.
+      operationId: listDomains
+      tags: [query]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                x-go-type-skip-optional-pointer: true
+                items:
+                  $ref: '#/components/schemas/Domain'
+        "400":
+          description: invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /graphs/goals:
+    post:
+      summary: Create a correlation graph from start objects to goal queries.
+      description: >
+        Specify a set of start objects, as queries or serialized objects, and a goal class.
+        Returns a graph containing all paths leading from a start object to a goal object.
+      operationId: graphGoals
+      tags: [correlate]
+      parameters:
+        - name: options
+          in: query
+          schema:
+            $ref: '#/components/schemas/GraphOptions'
+          style: form
+          explode: true
+      requestBody:
+        description: Search from start to goal classes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Goals'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        "206":
+          description: interrupted, partial result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        "400":
+          description: invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: request
+  /graphs/neighbours:
+    post:
+      summary: Create a neighbourhood graph around a start object to a given depth.
+      description: >
+        Specify a set of start objects, as queries or serialized objects,
+        and a depth for the neighbourhood search.
+        Returns a graph of all paths with depth or less edges leading from start objects.
+      operationId: graphNeighbours
+      tags: [correlate]
+      parameters:
+        - name: options
+          in: query
+          schema:
+            $ref: '#/components/schemas/GraphOptions'
+          style: form
+          explode: true
+      requestBody:
+        description: Search from start for neighbours.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Neighbours'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        "206":
+          description: interrupted, partial result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        "400":
+          description: invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: request
+  /lists/goals:
+    post:
+      summary: Create a list of goal nodes related to a starting point.
+      description: >
+        Specify a set of start objects, as queries or serialized objects, and a goal class.
+        Returns a list of all objects of the goal class that can be reached from a start object.
+      operationId: listGoals
+      tags: [correlate]
+      requestBody:
+        description: search from start to goal classes
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Goals'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                x-go-type-skip-optional-pointer: true
+                items:
+                  $ref: '#/components/schemas/Node'
+        "400":
+          description: invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: request
+  /objects:
+    get:
+      summary: Execute a query, returns a list of JSON objects.
+      description: >
+        Execute a single Korrel8r 'query' and return the list of serialized objects found.
+        Does not perform any correlation actions.
+      operationId: query
+      tags: [query]
+      parameters:
+        - name: query
+          in: query
+          description: Query string.
+          required: true
+          schema:
+              $ref: '#/components/schemas/Query'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                x-go-type-skip-optional-pointer: true
+                items:
+                  type: object
+                  additionalProperties: true
+        "400":
+          description: invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+
+    Query:
+      type: string
+      pattern: "[^:]+:[^:]+:[^:]+"
+      description: >
+        Represents a request to retrieve data for a particular Class.
+        It has 3 parts DOMAIN:CLASS:SELECTOR
+        DOMAIN: name of a domain.
+        CLASS: name of a class in the domain.
+        SELECTOR: domain-specific query string to retrieve selected objects.
+      example: 'k8s:Pod:{namespace: foo, name: bar, labels: { a: b }, fields: { c: d }}'
+      x-go-type-skip-optional-pointer: true
+
+    Class:
+      type: string
+      pattern: "[^:]+:[^:]+"
+      description: >
+        Names a class of objects with the same schema or structure.
+        It has 2 parts DOMAIN:CLASS
+        DOMAIN: name of a domain.
+        CLASS: name of a class in the domain.
+      example: 'trace:span'
+      x-go-type-skip-optional-pointer: true
+
+    Constraint:
+      description: Constrains the objects that will be included in search results.
+      type: object
+      x-go-type: korrel8r.Constraint
+      properties:
+        start:
+          type: string
+          description: Ignore objects with timestamps before this start time.
+          format: date-time
+        end:
+          type: string
+          description: Ignore objects with timestamps after this end time.
+          format: date-time
+          example: "2017-07-21T17:32:28.1341231Z"
+        limit:
+          type: integer
+          description: Limit total number of objects per query.
+        timeout:
+          description: Give up on requests to data stores if they take longer than this duration.
+          allOf:
+            - $ref: '#/components/schemas/Duration'
+
+    Duration:
+      type: string
+      description: >
+         The duration string is a sequence of decimal numbers, each with optional
+         fraction and a unit suffix. Valid time units are: ns, us (or µs), ms, s, m, h.
+      format: duration
+      example: 2h45m
+      x-go-type: time.Duration
+
+    Domain:
+      type: object
+      description: Domain configuration information.
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name of the domain.
+        stores:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Stores configured for the domain.
+          items:
+            $ref: '#/components/schemas/Store'
+    Edge:
+      type: object
+      required: [start, goal]
+      properties:
+        start:
+          description: Class name of the start node.
+          allOf:
+            - $ref: '#/components/schemas/Class'
+        goal:
+          description: Class name of the goal node.
+          allOf:
+            - $ref: '#/components/schemas/Class'
+        rules:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          x-omitempty: true
+          description: Set of rules followed along this edge.
+          items:
+            $ref: '#/components/schemas/Rule'
+      description: Directed edge in the result graph, from Start to Goal classes.
+
+    Error:
+      description: Error result containing an error message.
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Error message.
+
+    Goals:
+      type: object
+      required: [goals, start]
+      properties:
+        goals:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Goal classes for correlation.
+          example: [ "k8s:Pod" ]
+          items:
+            $ref: '#/components/schemas/Class'
+        start:
+          $ref: '#/components/schemas/Start'
+      description: Starting point for a goals search.
+
+    Graph:
+      type: object
+      properties:
+        edges:
+          description: List of graph edges.
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/Edge'
+        nodes:
+          description: List of graph nodes.
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/Node'
+      description: Graph resulting from a correlation search.
+
+    Neighbours:
+      type: object
+      required: [depth, start]
+      properties:
+        depth:
+          type: integer
+          description: Max depth of neighbours graph.
+        start:
+          $ref: '#/components/schemas/Start'
+      description: Starting point for a neighbours search.
+
+    Node:
+      type: object
+      required: [class]
+      properties:
+        class:
+          type: string
+          description: Full class name
+        count:
+          type: integer
+          description: Number of results for this class, after de-duplication.
+        queries:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Queries yielding results for this class.
+          items:
+            $ref: '#/components/schemas/QueryCount'
+      description: Node in the result graph, contains results for a single class.
+
+    QueryCount:
+      type: object
+      required: [query]
+      properties:
+        count:
+          type: integer
+          description: Number of results, omitted if the query was not executed.
+        query:
+          description: Query for correlation data.
+          allOf:
+            - $ref: '#/components/schemas/Query'
+      description: Query with number of results.
+
+    Rule:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name is an optional descriptive name.
+        queries:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Queries generated while following this rule.
+          items:
+            $ref: '#/components/schemas/QueryCount'
+      description: Rule is a correlation rule with a list of queries and results counts found during navigation.
+
+    Start:
+      type: object
+      properties:
+        class:
+          description: Class of starting objects and queries.
+          allOf:
+            - $ref: '#/components/schemas/Class'
+          x-go-type-skip-optional-pointer: true
+        constraint:
+          allOf:
+            - $ref: '#/components/schemas/Constraint'
+          description: Constrain the objects that will be returned.
+        objects:
+          description: Objects serialized as JSON.
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: object
+            additionalProperties: true
+            x-go-type: json.RawMessage
+        queries:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          description: Queries for starting objects
+          items:
+            $ref: '#/components/schemas/Query'
+      description: Start identifies a set of starting objects for correlation.
+
+    Store:
+      type: object
+      additionalProperties:
+        type: string
+      description: Store is a map string keys and values used to connect to a store.
+
+    GraphOptions:
+      type: object
+      description: Options controlling the form of the returned graph.
+      properties:
+        rules:
+          description: Include rule names in graph edges.
+          type: boolean
+        zeros:
+          description: Include queries that returned no results.
+          type: boolean

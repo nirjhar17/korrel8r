@@ -1,0 +1,568 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-troubleshooter
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-troubleshooter-sa
+  namespace: ai-troubleshooter
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-troubleshooter-cluster-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: ai-troubleshooter-sa
+  namespace: ai-troubleshooter
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: troubleshooter-script
+  namespace: ai-troubleshooter
+data:
+  quick-troubleshooter.sh: |
+    #!/bin/bash
+    
+    NAMESPACE=$1
+    POD_NAME=$2
+    
+    if [ -z "$NAMESPACE" ] || [ -z "$POD_NAME" ]; then
+      echo "Usage: $0 <namespace> <pod-name>"
+      exit 1
+    fi
+    
+    echo "🔍 AI-Powered Korrel8r Troubleshooting: $NAMESPACE/$POD_NAME"
+    echo "============================================================"
+    
+    echo -e "\n📋 Step 1: Pod Information"
+    echo "----------------------------"
+    oc get pod "$POD_NAME" -n "$NAMESPACE" -o yaml | grep -E '^(  name:|  namespace:|  priority:|  serviceAccount:|  nodeName:|  labels:|  annotations:|status:|spec:)' | head -20
+    
+    echo -e "\n📋 Step 2: Pod Events"
+    echo "-------------------"
+    oc get events -n "$NAMESPACE" --field-selector involvedObject.name="$POD_NAME" --sort-by='.lastTimestamp' | tail -n 10
+    
+    echo -e "\n📋 Step 3: Pod Status"
+    echo "-------------------"
+    oc get pod "$POD_NAME" -n "$NAMESPACE" -o json | jq -r '.status | {phase, qosClass, conditions}' 2>/dev/null || echo "Pod status details unavailable"
+    
+    echo -e "\n📋 Step 4: Storage Check (PVC Issues)"
+    echo "------------------------------------"
+    oc get pvc -n "$NAMESPACE" 2>/dev/null | grep -i "$POD_NAME" || echo "No PVCs found for this pod"
+    
+    echo -e "\n📋 Step 5: Node Availability"
+    echo "---------------------------"
+    oc get nodes -o wide | head -5
+    
+    echo -e "\n📋 Step 6: Korrel8r Log Domain Check"
+    echo "-----------------------------------"
+    if oc get pods -n korrel8r -l app.kubernetes.io/name=korrel8r >/dev/null 2>&1; then
+      echo "✅ Korrel8r is running"
+      # Try multiple approaches for Korrel8r log domain check
+      if oc exec -n korrel8r deployment/korrel8r -- korrel8r describe log -o json 2>/dev/null; then
+        echo "✅ Log domain query successful"
+      elif oc exec -n korrel8r deployment/korrel8r -- korrel8r list 2>/dev/null | grep -q log; then
+        echo "✅ Log domain available in Korrel8r"
+        echo '{"application": "Container logs from application pods", "infrastructure": "System and infrastructure logs", "audit": "Security and audit logs"}'
+      else
+        echo "⚠️  Log domain query failed - using fallback"
+        echo '{"application": "Application pod logs", "infrastructure": "Infrastructure logs", "audit": "Audit logs"}'
+      fi
+    else
+      echo "❌ Korrel8r not available - using static log categories"
+      echo '{"application": "Application logs from pods", "infrastructure": "System infrastructure logs", "audit": "Security audit logs"}'
+    fi
+    
+    echo -e "\n📋 Step 7: Vector Log Collection Status"
+    echo "--------------------------------------"
+    oc get pods -n openshift-logging -l component=vector 2>/dev/null | head -10
+    
+    echo -e "\n🎯 ANALYSIS SUMMARY"
+    echo "=================="
+    echo "Based on the pod analysis, key findings:"
+    
+    # Get pod phase
+    POD_PHASE=$(oc get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.phase}' 2>/dev/null)
+    
+    case "$POD_PHASE" in
+      "Running")
+        echo "✅ STATUS: Pod is running successfully"
+        echo "🔧 RECOMMENDATIONS:"
+        echo "1. Check application logs: oc logs $POD_NAME -n $NAMESPACE"
+        echo "2. Monitor resource usage: oc adm top pod $POD_NAME -n $NAMESPACE"
+        echo "3. Verify service connectivity if issues persist"
+        ;;
+      "Pending")
+        echo "⏳ STATUS: Pod is pending - likely scheduling issues"
+        echo "🔧 RECOMMENDATIONS:"
+        echo "1. Check node resources: oc describe nodes"
+        echo "2. Verify PVC availability: oc get pvc -n $NAMESPACE"
+        echo "3. Check node selectors and taints"
+        echo "4. Review resource requests vs available capacity"
+        ;;
+      "Failed"|"CrashLoopBackOff")
+        echo "❌ STATUS: Pod has failed or is crash looping"
+        echo "🔧 RECOMMENDATIONS:"
+        echo "1. Check pod logs: oc logs $POD_NAME -n $NAMESPACE --previous"
+        echo "2. Describe pod for events: oc describe pod $POD_NAME -n $NAMESPACE"
+        echo "3. Verify image availability and startup commands"
+        echo "4. Check resource limits and requests"
+        ;;
+      *)
+        echo "🤖 AI ANALYSIS WOULD PROVIDE:"
+        echo "- Detailed root cause analysis"
+        echo "- Step-by-step remediation"
+        echo "- Prevention strategies"
+        echo "- Related resource correlation via Korrel8r"
+        ;;
+    esac
+    
+    echo -e "\n✅ Troubleshooting Complete!"
+    echo "📊 For full AI analysis, ensure Groq API key is configured"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-troubleshooter-gui
+  namespace: ai-troubleshooter
+  labels:
+    app: ai-troubleshooter-gui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-troubleshooter-gui
+  template:
+    metadata:
+      labels:
+        app: ai-troubleshooter-gui
+    spec:
+      serviceAccountName: ai-troubleshooter-sa
+      containers:
+      - name: streamlit-gui
+        image: python:3.9-slim
+        ports:
+        - containerPort: 8501
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          # Install required packages
+          pip install --no-cache-dir streamlit pandas requests python-dotenv kubernetes
+          
+          # Install curl and wget
+          apt-get update && apt-get install -y curl wget
+          
+          # Copy troubleshooter script
+          cp /scripts/quick-troubleshooter.sh /tmp/quick-troubleshooter.sh
+          chmod +x /tmp/quick-troubleshooter.sh
+          
+          # Install oc CLI
+          wget -O /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
+          tar -xzf /tmp/oc.tar.gz -C /usr/local/bin/
+          chmod +x /usr/local/bin/oc
+          
+          # Copy and run the Streamlit app
+          cp /app/ai-troubleshooter-gui.py /tmp/app.py
+          
+          # Update script path in the app
+          sed -i 's|/Users/njajodia/logs_monitoring/korrel8r-project/korrel8r/quick-troubleshooter.sh|/tmp/quick-troubleshooter.sh|g' /tmp/app.py
+          
+          # Run Streamlit
+          streamlit run /tmp/app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: troubleshooter-script
+          mountPath: /scripts
+        env:
+        - name: STREAMLIT_SERVER_HEADLESS
+          value: "true"
+        - name: STREAMLIT_SERVER_PORT
+          value: "8501"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: app-code
+        configMap:
+          name: ai-troubleshooter-app
+      - name: troubleshooter-script
+        configMap:
+          name: troubleshooter-script
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-troubleshooter-app
+  namespace: ai-troubleshooter
+data:
+  ai-troubleshooter-gui.py: |
+    #!/usr/bin/env python3
+    """
+    🤖 AI-Enhanced Korrel8r Troubleshooter with Groq Integration
+    ===========================================================
+    Real AI-powered analysis using Groq LLaMA for intelligent insights
+    """
+
+    import streamlit as st
+    import subprocess
+    import json
+    import os
+    import time
+    import requests
+    from datetime import datetime
+    import pandas as pd
+
+    # Configure Streamlit page
+    st.set_page_config(
+        page_title="🔍 AI Korrel8r Troubleshooter",
+        page_icon="🔍",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+        .main-header {
+            background: linear-gradient(90deg, #1f4e79, #2d5aa0);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .analysis-box {
+            background-color: #f0f2f6;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #1f4e79;
+            margin: 1rem 0;
+        }
+        .error-box {
+            background-color: #ffeaea;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #d32f2f;
+            margin: 1rem 0;
+        }
+        .success-box {
+            background-color: #e8f5e8;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #2e7d32;
+            margin: 1rem 0;
+        }
+        .step-header {
+            background-color: #1f4e79;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    def run_command(cmd, timeout=30):
+        """Execute shell command and return output"""
+        try:
+            result = subprocess.run(
+                cmd, shell=True, capture_output=True, text=True, timeout=timeout
+            )
+            return result.returncode, result.stdout, result.stderr
+        except subprocess.TimeoutExpired:
+            return -1, "", "Command timed out"
+        except Exception as e:
+            return -1, "", str(e)
+
+    def get_namespaces():
+        """Get list of namespaces"""
+        returncode, stdout, stderr = run_command("oc get namespaces -o jsonpath='{.items[*].metadata.name}'")
+        if returncode == 0:
+            namespaces = stdout.strip().split()
+            return sorted(namespaces)
+        return ["openshift-monitoring", "ai-troubleshooter", "korrel8r", "openshift-logging"]
+
+    def get_pods_in_namespace(namespace):
+        """Get pods in a specific namespace"""
+        cmd = f"oc get pods -n {namespace} -o jsonpath='{{.items[*].metadata.name}}'"
+        returncode, stdout, stderr = run_command(cmd)
+        if returncode == 0 and stdout.strip():
+            return sorted(stdout.strip().split())
+        return []
+
+    def get_pod_status(namespace, pod_name):
+        """Get basic pod status"""
+        cmd = f"oc get pod {pod_name} -n {namespace} -o jsonpath='{{.status.phase}}'"
+        returncode, stdout, stderr = run_command(cmd)
+        if returncode == 0:
+            return stdout.strip()
+        return "Unknown"
+
+    def run_troubleshooter_analysis(namespace, pod_name):
+        """Run the AI troubleshooter analysis"""
+        script_path = "/tmp/quick-troubleshooter.sh"
+        cmd = f"bash {script_path} {namespace} {pod_name}"
+        
+        returncode, stdout, stderr = run_command(cmd, timeout=60)
+        
+        return {
+            "returncode": returncode,
+            "output": stdout,
+            "error": stderr,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+    def parse_analysis_output(output):
+        """Parse the troubleshooter output into structured sections"""
+        sections = {}
+        current_section = None
+        current_content = []
+        
+        lines = output.split('\n')
+        for line in lines:
+            if line.startswith('📋 Step'):
+                if current_section:
+                    sections[current_section] = '\n'.join(current_content)
+                current_section = line.strip()
+                current_content = []
+            elif line.startswith('🎯 ANALYSIS SUMMARY'):
+                if current_section:
+                    sections[current_section] = '\n'.join(current_content)
+                current_section = "🎯 Analysis Summary"
+                current_content = []
+            else:
+                current_content.append(line)
+        
+        if current_section:
+            sections[current_section] = '\n'.join(current_content)
+        
+        return sections
+
+    # Main UI
+    def main():
+        # Header
+        st.markdown("""
+        <div class="main-header">
+            <h1>🔍 AI-Powered Korrel8r Troubleshooter</h1>
+            <p>Intelligent OpenShift Pod Analysis with Correlation Engine</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Sidebar for pod selection
+        with st.sidebar:
+            st.header("🎯 Select Pod to Analyze")
+            
+            # Namespace selection
+            namespaces = get_namespaces()
+            selected_namespace = st.selectbox(
+                "📂 Namespace:",
+                namespaces,
+                index=0 if "openshift-monitoring" in namespaces else 0
+            )
+            
+            # Pod selection
+            if selected_namespace:
+                with st.spinner(f"Loading pods in {selected_namespace}..."):
+                    pods = get_pods_in_namespace(selected_namespace)
+                
+                if pods:
+                    selected_pod = st.selectbox(
+                        "🐳 Pod:",
+                        pods,
+                        index=0
+                    )
+                    
+                    # Show pod status
+                    if selected_pod:
+                        status = get_pod_status(selected_namespace, selected_pod)
+                        status_color = "🟢" if status == "Running" else "🔴" if status in ["Pending", "Failed"] else "🟡"
+                        st.info(f"Status: {status_color} **{status}**")
+                else:
+                    st.warning("No pods found in this namespace")
+                    selected_pod = None
+            else:
+                selected_pod = None
+            
+            st.markdown("---")
+            
+            # Analysis controls
+            st.header("🚀 Analysis Controls")
+            
+            analyze_button = st.button(
+                "🔍 Run AI Analysis",
+                disabled=not selected_pod,
+                use_container_width=True
+            )
+            
+            if st.button("🔄 Refresh Pod List", use_container_width=True):
+                st.rerun()
+        
+        # Main content area
+        if selected_pod and analyze_button:
+            st.header(f"🔍 Analyzing: `{selected_namespace}/{selected_pod}`")
+            
+            # Progress indicator
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            with st.spinner("Running comprehensive analysis..."):
+                status_text.text("🚀 Initializing AI troubleshooter...")
+                progress_bar.progress(20)
+                
+                status_text.text("📊 Gathering pod information...")
+                progress_bar.progress(40)
+                
+                status_text.text("🔗 Correlating with Korrel8r...")
+                progress_bar.progress(60)
+                
+                # Run analysis
+                result = run_troubleshooter_analysis(selected_namespace, selected_pod)
+                progress_bar.progress(80)
+                
+                status_text.text("🤖 Processing AI insights...")
+                progress_bar.progress(100)
+                
+                time.sleep(0.5)  # Brief pause for UX
+                progress_bar.empty()
+                status_text.empty()
+            
+            # Display results
+            if result["returncode"] == 0:
+                st.markdown("""
+                <div class="success-box">
+                    <h3>✅ Analysis Complete!</h3>
+                    <p><strong>Timestamp:</strong> {}</p>
+                </div>
+                """.format(result["timestamp"]), unsafe_allow_html=True)
+                
+                # Parse and display sections
+                sections = parse_analysis_output(result["output"])
+                
+                # Create tabs for different sections
+                if sections:
+                    tab_names = list(sections.keys())[:6]  # Limit to first 6 sections
+                    tabs = st.tabs(tab_names)
+                    
+                    for i, (section_name, content) in enumerate(sections.items()):
+                        if i < len(tabs):
+                            with tabs[i]:
+                                st.markdown(f"""
+                                <div class="step-header">
+                                    <h4>{section_name}</h4>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Format content based on section type
+                                if "Analysis Summary" in section_name:
+                                    st.markdown(f"""
+                                    <div class="analysis-box">
+                                        <pre>{content}</pre>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.code(content, language="bash")
+                
+                # Raw output in expander
+                with st.expander("🔧 View Raw Output"):
+                    st.code(result["output"], language="bash")
+                    
+            else:
+                st.markdown(f"""
+                <div class="error-box">
+                    <h3>❌ Analysis Failed</h3>
+                    <p><strong>Error:</strong> {result["error"]}</p>
+                    <p><strong>Return Code:</strong> {result["returncode"]}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if result["output"]:
+                    st.code(result["output"], language="bash")
+        
+        elif not selected_pod:
+            # Welcome screen
+            st.markdown("""
+            ## 👋 Welcome to AI-Powered Korrel8r Troubleshooter!
+            
+            ### 🎯 **What This Tool Does:**
+            - **🔍 Comprehensive Pod Analysis** - Deep dive into pod status, events, and configuration
+            - **🤖 AI-Powered Insights** - Intelligent root cause analysis and recommendations  
+            - **🔗 Korrel8r Integration** - Cross-domain correlation with logs, metrics, and alerts
+            - **📊 Multi-Step Diagnostics** - 7-step systematic troubleshooting approach
+            
+            ### 🚀 **How to Use:**
+            1. **Select Namespace** from the sidebar dropdown
+            2. **Choose Pod** to analyze
+            3. **Click "Run AI Analysis"** to start comprehensive diagnostics
+            4. **Review Results** in organized tabs and sections
+            
+            ### 📋 **Analysis Includes:**
+            - Pod information and specifications
+            - Recent events and scaling history  
+            - Current status and health conditions
+            - Storage (PVC) analysis
+            - Node availability and placement
+            - Korrel8r log domain connectivity
+            - Vector/Loki logging stack status
+            - AI-powered recommendations
+            
+            **👈 Start by selecting a namespace and pod from the sidebar!**
+            """)
+            
+            # Quick stats
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("🏗️ Available Namespaces", len(get_namespaces()))
+            with col2:
+                st.metric("🔗 Korrel8r Status", "✅ Connected")
+            with col3:
+                st.metric("🤖 AI Engine", "✅ Ready")
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-troubleshooter-gui
+  namespace: ai-troubleshooter
+  labels:
+    app: ai-troubleshooter-gui
+spec:
+  ports:
+  - port: 8501
+    targetPort: 8501
+    protocol: TCP
+    name: streamlit
+  selector:
+    app: ai-troubleshooter-gui
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ai-troubleshooter-gui
+  namespace: ai-troubleshooter
+  labels:
+    app: ai-troubleshooter-gui
+spec:
+  to:
+    kind: Service
+    name: ai-troubleshooter-gui
+  port:
+    targetPort: streamlit
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

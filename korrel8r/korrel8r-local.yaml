@@ -1,0 +1,14 @@
+# Local Korrel8r configuration for testing
+stores:
+  - domain: k8s
+  - domain: alert
+    metrics: 'https://prometheus-k8s-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+    alertmanager: 'https://alertmanager-main-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+  - domain: log
+    lokiStack: 'https://logging-loki-openshift-logging.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+    direct: true
+  - domain: metric
+    metric: 'https://prometheus-k8s-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+
+include:
+  - etc/korrel8r/rules/all.yaml

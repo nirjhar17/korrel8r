@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-problematic-pods
+---
+# Pod 1: CrashLoopBackOff - Application that fails to start
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crashloop-app
+  namespace: test-problematic-pods
+  labels:
+    app: crashloop-test
+    problem-type: crashloop
+spec:
+  containers:
+  - name: failing-app
+    image: busybox:latest
+    command: ["sh", "-c"]
+    args:
+    - |
+      echo "Starting application..."
+      echo "ERROR: Database connection failed!"
+      echo "FATAL: Cannot connect to redis://redis.example.com:6379"
+      echo "Application crashed with exit code 1"
+      exit 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+---
+# Pod 2: Pending - Resource constraints
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-hungry-app
+  namespace: test-problematic-pods
+  labels:
+    app: resource-test
+    problem-type: pending
+spec:
+  containers:
+  - name: hungry-app
+    image: nginx:alpine
+    resources:
+      requests:
+        memory: "16Gi"  # Unrealistic memory request
+        cpu: "8"        # Unrealistic CPU request
+      limits:
+        memory: "32Gi"
+        cpu: "16"
+---
+# Pod 3: ImagePullBackOff - Invalid image
+apiVersion: v1
+kind: Pod
+metadata:
+  name: invalid-image-app
+  namespace: test-problematic-pods
+  labels:
+    app: image-test
+    problem-type: imagepull
+spec:
+  containers:
+  - name: invalid-image
+    image: nonexistent/invalid-image:v999
+    command: ["echo", "This will never run"]
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "50m"
+---
+# Pod 4: Init Container Failure
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-failure-app
+  namespace: test-problematic-pods
+  labels:
+    app: init-test
+    problem-type: init-failure
+spec:
+  initContainers:
+  - name: failing-init
+    image: busybox:latest
+    command: ["sh", "-c"]
+    args:
+    - |
+      echo "Running initialization..."
+      echo "ERROR: Failed to download configuration from config-server"
+      echo "INIT FAILED: Cannot proceed without config"
+      exit 1
+  containers:
+  - name: main-app
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+---
+# Pod 5: Volume Mount Issues
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-mount-issue
+  namespace: test-problematic-pods
+  labels:
+    app: volume-test
+    problem-type: volume-mount
+spec:
+  containers:
+  - name: volume-app
+    image: nginx:alpine
+    volumeMounts:
+    - name: nonexistent-volume
+      mountPath: /data
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: nonexistent-configmap
+---
+# Pod 6: Running but with Issues (for successful analysis demo)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: running-with-warnings
+  namespace: test-problematic-pods
+  labels:
+    app: warning-test
+    problem-type: running-warnings
+spec:
+  containers:
+  - name: warning-app
+    image: busybox:latest
+    command: ["sh", "-c"]
+    args:
+    - |
+      echo "Application started successfully"
+      echo "WARNING: Low disk space detected"
+      echo "WARNING: High memory usage"
+      while true; do
+        echo "$(date): Application running with warnings..."
+        sleep 30
+      done
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "50m"
+      limits:
+        memory: "64Mi"
+        cpu: "100m"
+---
+# ConfigMap for testing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+  namespace: test-problematic-pods
+data:
+  app.properties: |
+    database.url=postgres://db.example.com:5432/app
+    redis.url=redis://redis.example.com:6379
+    log.level=ERROR
+---
+# Service for testing
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: test-problematic-pods
+spec:
+  selector:
+    app: warning-test
+  ports:
+  - port: 80
+    targetPort: 8080

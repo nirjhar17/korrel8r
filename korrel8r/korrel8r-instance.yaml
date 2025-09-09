@@ -1,0 +1,23 @@
+apiVersion: korrel8r.openshift.io/v1alpha1
+kind: Korrel8r
+metadata:
+  name: korrel8r
+  namespace: korrel8r
+spec:
+  debug:
+    verbose: 1
+  # Enable OpenShift route for web access
+  route:
+    enabled: true
+    host: ""  # Let OpenShift generate the route
+  # Configure for OpenShift logging
+  stores:
+    - domain: k8s
+    - domain: alert
+      metrics: 'https://prometheus-k8s-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+      alertmanager: 'https://alertmanager-main-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+    - domain: log
+      lokiStack: 'https://logging-loki-openshift-logging.apps.rosa.loki123.orwi.p3.openshiftapps.com'
+      direct: true
+    - domain: metric
+      metric: 'https://prometheus-k8s-openshift-monitoring.apps.rosa.loki123.orwi.p3.openshiftapps.com'

@@ -1,0 +1,32 @@
+rules:
+  - name: LogToPod
+    start:
+      domain: log
+    goal:
+      domain: k8s
+      classes: [Pod]
+    result:
+      query: |-
+        k8s:Pod:{namespace: "{{.kubernetes_namespace_name}}", name: "{{.kubernetes_pod_name}}"}
+
+  - name: SelectorToLogs
+    start:
+      domain: k8s
+      classes: [selectors]
+    goal:
+      domain: log
+    result:
+      query: |-
+        log:{{logTypeForNamespace .metadata.namespace}}:{
+          "name":"{{.metadata.namespace}}",
+          "labels":{{.spec.selector.matchLabels | logSafeLabels | mustToJson}} }
+
+  - name: PodToLogs
+    start:
+      domain: k8s
+      classes: [Pod]
+    goal:
+      domain: log
+    result:
+      query: |-
+        log:{{ logTypeForNamespace .metadata.namespace }}:{"namespace":"{{.metadata.namespace}}","name":"{{.metadata.name}}"}

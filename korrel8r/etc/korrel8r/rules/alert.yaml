@@ -1,0 +1,59 @@
+rules:
+  - name: AlertToDeployment
+    start:
+      domain: alert
+    goal:
+      domain: k8s
+      classes: [Deployment.apps]
+    result:
+      query: |-
+        k8s:Deployment.v1.apps:{namespace: "{{.Labels.namespace}}", name: "{{.Labels.deployment}}"}
+
+  - name: AlertToPod
+    start:
+      domain: alert
+    goal:
+      domain: k8s
+      classes: [Pod.]
+    result:
+      query: |-
+        k8s:Pod.:{namespace: "{{.Labels.namespace}}", name: "{{.Labels.pod}}"}
+
+  - name: AlertToPodDisruptionBudget
+    start:
+      domain: alert
+    goal:
+      domain: k8s
+      classes: [PodDisruptionBudget.v1.policy]
+    result:
+      query: |-
+        k8s:PodDisruptionBudget.v1.policy:{namespace: "{{.Labels.namespace}}", name: "{{.Labels.poddisruptionbudget}}"}
+
+  - name: AlertToDaemonSet
+    start:
+      domain: alert
+    goal:
+      domain: k8s
+      classes: [DaemonSet.apps]
+    result:
+      query: |-
+        k8s:DaemonSet.apps:{namespace: "{{.Labels.namespace}}", name: "{{.Labels.daemonset}}"}
+
+  - name: AlertToStatefulSet
+    start:
+      domain: alert
+    goal:
+      domain: k8s
+      classes: [StatefulSet.apps]
+    result:
+      query: |-
+        k8s:StatefulSet.apps:{namespace: "{{.Labels.namespace}}", name: "{{.Labels.statefulset}}"}
+
+  - name: AlertToMetric
+    start:
+      domain: alert
+    goal:
+      domain: metric
+    result:
+      query: |-
+        metric:metric:{{.Expression}}

@@ -1,0 +1,9 @@
+[submodule "operator"]
+	path = operator
+	url = git@github.com:alanconway/operator.git
+[submodule "client"]
+	path = client
+	url = git@github.com:korrel8r/client.git
+[submodule "doc/troubleshooting-panel"]
+	path = doc/troubleshooting-panel
+	url = https://github.com/openshift/troubleshooting-panel-console-plugin.git

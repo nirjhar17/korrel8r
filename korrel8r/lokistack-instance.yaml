@@ -1,0 +1,30 @@
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: logging-loki
+  namespace: openshift-logging
+spec:
+  size: 1x.small
+  storage:
+    schemas:
+    - version: v12
+      effectiveDate: "2022-06-01"
+    secret:
+      name: logging-loki-s3
+      type: s3
+  storageClassName: gp3-csi
+  tenants:
+    mode: openshift-logging
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: logging-loki-s3
+  namespace: openshift-logging
+type: Opaque
+stringData:
+  bucketnames: "loki-bucket"
+  endpoint: "https://s3.amazonaws.com"
+  access_key_id: "placeholder"
+  access_key_secret: "placeholder"
+  region: "us-east-1"
