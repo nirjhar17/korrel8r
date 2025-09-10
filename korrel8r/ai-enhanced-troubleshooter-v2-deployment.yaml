@@ -1,0 +1,1238 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-troubleshooter-v2
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-troubleshooter-sa-v2
+  namespace: ai-troubleshooter-v2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-troubleshooter-v2-binding
+subjects:
+- kind: ServiceAccount
+  name: ai-troubleshooter-sa-v2
+  namespace: ai-troubleshooter-v2
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-troubleshooter-app-v2
+  namespace: ai-troubleshooter-v2
+data:
+  ai-enhanced-troubleshooter-v2.py: |
+    #!/usr/bin/env python3
+    """
+    Enhanced AI-Powered OpenShift Troubleshooter v2.0
+    Features:
+    - Granular error categorization with severity levels
+    - AI-driven root cause analysis with fix suggestions  
+    - Pod resource consumption analysis
+    - Cluster-wide health correlation
+    - Step-by-Step remediation guidance
+    - Log anomaly detection
+    - Visual timeline and event flowchart
+    """
+
+    import streamlit as st
+    import subprocess
+    import json
+    import requests
+    import time
+    import re
+    from datetime import datetime, timedelta
+    from typing import Dict, List, Tuple, Optional
+    import pandas as pd
+    import os
+
+    # Page configuration
+    st.set_page_config(
+        page_title="Enhanced AI OpenShift Troubleshooter v2.0",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+
+    # Enhanced Configuration
+        GROQ_API_KEY = os.getenv("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE").strip()
+    GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
+    GROQ_MODEL = "llama-3.3-70b-versatile"
+
+    # Severity levels and categories
+    SEVERITY_LEVELS = {
+        "CRITICAL": {"color": "#c9190b", "icon": "🔴", "priority": 1},
+        "WARNING": {"color": "#f0ab00", "icon": "🟡", "priority": 2},
+        "INFO": {"color": "#0066cc", "icon": "🔵", "priority": 3},
+        "SUCCESS": {"color": "#3e8635", "icon": "🟢", "priority": 4}
+    }
+
+    ERROR_CATEGORIES = {
+        "RESOURCE": {"name": "Resource Issues", "icon": "💾", "patterns": ["insufficient", "resource", "memory", "cpu", "disk"]},
+        "NETWORK": {"name": "Network Issues", "icon": "🌐", "patterns": ["network", "dns", "connection", "timeout", "unreachable"]},
+        "STORAGE": {"name": "Storage Issues", "icon": "💿", "patterns": ["volume", "mount", "pvc", "storage", "disk"]},
+        "IMAGE": {"name": "Image Issues", "icon": "📦", "patterns": ["image", "pull", "registry", "manifest"]},
+        "PERMISSION": {"name": "Permission Issues", "icon": "🔐", "patterns": ["permission", "forbidden", "unauthorized", "rbac"]},
+        "CONFIG": {"name": "Configuration Issues", "icon": "⚙️", "patterns": ["config", "environment", "secret", "configmap"]},
+        "INIT": {"name": "Initialization Issues", "icon": "🔄", "patterns": ["init", "startup", "readiness", "liveness"]},
+        "SCHEDULING": {"name": "Scheduling Issues", "icon": "📅", "patterns": ["schedule", "node", "affinity", "taint", "toleration"]}
+    }
+
+    # Enhanced CSS with severity colors and better visualization
+    st.markdown("""
+    <style>
+        .main-header {
+            background: linear-gradient(90deg, #0066cc, #004080);
+            color: white !important;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid #0066cc;
+            box-shadow: 0 4px 8px rgba(0, 102, 204, 0.2);
+        }
+        
+        .main-header h1 {
+            color: white !important;
+            margin-bottom: 0.5rem;
+        }
+        
+        .main-header p {
+            color: white !important;
+            opacity: 0.9;
+        }
+        
+        .severity-critical {
+            background-color: #fdf2f2 !important;
+            color: #721c24 !important;
+            border-left: 6px solid #c9190b;
+            border: 1px solid #c9190b;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            box-shadow: 0 2px 4px rgba(201, 25, 11, 0.1);
+        }
+        
+        .severity-warning {
+            background-color: #fdf8e7 !important;
+            color: #795600 !important;
+            border-left: 6px solid #f0ab00;
+            border: 1px solid #f0ab00;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            box-shadow: 0 2px 4px rgba(240, 171, 0, 0.1);
+        }
+        
+        .severity-info {
+            background-color: #f0f8ff !important;
+            color: #151515 !important;
+            border-left: 6px solid #0066cc;
+            border: 1px solid #0066cc;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.1);
+        }
+        
+        .severity-success {
+            background-color: #f3faf3 !important;
+            color: #1e4f18 !important;
+            border-left: 6px solid #3e8635;
+            border: 1px solid #3e8635;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            box-shadow: 0 2px 4px rgba(62, 134, 53, 0.1);
+        }
+        
+        .resource-metrics {
+            background-color: #f8f9fa !important;
+            color: #151515 !important;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #d2d2d2;
+            margin: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .remediation-step {
+            background-color: #e8f4fd !important;
+            color: #151515 !important;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 6px solid #0066cc;
+            margin: 1rem 0;
+            border: 1px solid #0066cc;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.1);
+        }
+        
+        .timeline-item {
+            background-color: #ffffff !important;
+            color: #151515 !important;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid #d2d2d2;
+            margin: 0.75rem 0;
+            position: relative;
+            padding-left: 3.5rem;
+            transition: box-shadow 0.2s;
+        }
+        
+        .timeline-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timeline-item::before {
+            content: "●";
+            position: absolute;
+            left: 1.5rem;
+            top: 1.25rem;
+            color: #0066cc;
+            font-size: 1.5rem;
+        }
+        
+        .cluster-health {
+            background-color: #f5f5f5 !important;
+            color: #151515 !important;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #d2d2d2;
+            margin: 1rem 0;
+        }
+        
+        .anomaly-alert {
+            background-color: #fff4e6 !important;
+            color: #8c4400 !important;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 6px solid #f0ab00;
+            border: 1px solid #f0ab00;
+            margin: 1rem 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(240, 171, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(240, 171, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(240, 171, 0, 0); }
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #d2d2d2;
+            text-align: center;
+            margin: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .severity-critical *, .severity-warning *, .severity-info *, .severity-success *,
+        .resource-metrics *, .remediation-step *, .timeline-item *, .cluster-health *, .anomaly-alert * {
+            color: inherit !important;
+        }
+        
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 8px;
+            padding: 12px 24px;
+        }
+        
+        .command-center-header {
+            background: linear-gradient(135deg, #0066cc 0%, #004080 100%);
+            color: white !important;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid #0066cc;
+            box-shadow: 0 8px 16px rgba(0, 102, 204, 0.3);
+        }
+        
+        .pod-row {
+            background-color: #ffffff !important;
+            border: 1px solid #d2d2d2;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        
+        .pod-row:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .severity-critical-row {
+            border-left: 6px solid #c9190b;
+            background-color: #fdf2f2 !important;
+        }
+        
+        .severity-high-row {
+            border-left: 6px solid #f0ab00;
+            background-color: #fdf8e7 !important;
+        }
+        
+        .severity-medium-row {
+            border-left: 6px solid #0066cc;
+            background-color: #f0f8ff !important;
+        }
+        
+        .health-metric {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #d2d2d2;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(135deg, #0066cc 0%, #004080 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .analyze-btn:hover {
+            background: linear-gradient(135deg, #004080 0%, #002040 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    def run_command(cmd, timeout=30):
+        """Execute shell command and return output"""
+        try:
+            result = subprocess.run(
+                cmd, shell=True, capture_output=True, text=True, timeout=timeout
+            )
+            return result.returncode, result.stdout, result.stderr
+        except subprocess.TimeoutExpired:
+            return -1, "", "Command timed out"
+        except Exception as e:
+            return -1, "", str(e)
+
+    def categorize_error(error_text: str) -> Tuple[str, str]:
+        """Categorize error and determine severity"""
+        error_lower = error_text.lower()
+        
+        # Determine category
+        category = "CONFIG"  # default
+        for cat_key, cat_info in ERROR_CATEGORIES.items():
+            if any(pattern in error_lower for pattern in cat_info["patterns"]):
+                category = cat_key
+                break
+        
+        # Determine severity based on keywords and patterns
+        if any(word in error_lower for word in ["failed", "error", "crash", "critical", "fatal", "emergency"]):
+            severity = "CRITICAL"
+        elif any(word in error_lower for word in ["warning", "warn", "deprecated", "retry", "backoff"]):
+            severity = "WARNING"
+        elif any(word in error_lower for word in ["success", "completed", "ready", "healthy"]):
+            severity = "SUCCESS"
+        else:
+            severity = "INFO"
+        
+        return category, severity
+
+    def analyze_resource_consumption(namespace: str, pod: str) -> Dict:
+        """Analyze pod resource consumption"""
+        try:
+            # Get pod resource requests and limits
+            cmd = f"oc get pod {pod} -n {namespace} -o json"
+            returncode, stdout, stderr = run_command(cmd)
+            
+            if returncode != 0:
+                return {"error": f"Failed to get pod info: {stderr}"}
+            
+            pod_data = json.loads(stdout)
+            
+            # Extract resource information
+            containers = pod_data.get("spec", {}).get("containers", [])
+            resource_info = {
+                "requests": {"cpu": "Not specified", "memory": "Not specified"},
+                "limits": {"cpu": "Not specified", "memory": "Not specified"},
+                "containers": len(containers)
+            }
+            
+            for container in containers:
+                resources = container.get("resources", {})
+                requests = resources.get("requests", {})
+                limits = resources.get("limits", {})
+                
+                # Aggregate requests and limits (taking the first container's values for simplicity)
+                if "cpu" in requests and resource_info["requests"]["cpu"] == "Not specified":
+                    resource_info["requests"]["cpu"] = requests["cpu"]
+                if "memory" in requests and resource_info["requests"]["memory"] == "Not specified":
+                    resource_info["requests"]["memory"] = requests["memory"]
+                if "cpu" in limits and resource_info["limits"]["cpu"] == "Not specified":
+                    resource_info["limits"]["cpu"] = limits["cpu"]
+                if "memory" in limits and resource_info["limits"]["memory"] == "Not specified":
+                    resource_info["limits"]["memory"] = limits["memory"]
+            
+            # Get current resource usage (if available)
+            cmd = f"oc adm top pod {pod} -n {namespace} --no-headers 2>/dev/null || echo 'N/A N/A N/A'"
+            returncode, stdout, stderr = run_command(cmd)
+            
+            usage_parts = stdout.strip().split()
+            resource_info["current"] = {
+                "cpu": usage_parts[1] if len(usage_parts) > 1 and usage_parts[1] != "N/A" else "N/A",
+                "memory": usage_parts[2] if len(usage_parts) > 2 and usage_parts[2] != "N/A" else "N/A"
+            }
+            
+            return resource_info
+            
+        except Exception as e:
+            return {"error": f"Resource analysis failed: {str(e)}"}
+
+    def get_cluster_health(namespace: str) -> Dict:
+        """Get cluster-wide health information"""
+        try:
+            health_info = {}
+            
+            # Get node status
+            cmd = "oc get nodes --no-headers | wc -l"
+            returncode, stdout, stderr = run_command(cmd)
+            health_info["total_nodes"] = stdout.strip() if returncode == 0 else "N/A"
+            
+            cmd = "oc get nodes --no-headers | grep -c Ready"
+            returncode, stdout, stderr = run_command(cmd)
+            health_info["ready_nodes"] = stdout.strip() if returncode == 0 else "N/A"
+            
+            # Get namespace pod status
+            cmd = f"oc get pods -n {namespace} --no-headers | wc -l"
+            returncode, stdout, stderr = run_command(cmd)
+            health_info["total_pods"] = stdout.strip() if returncode == 0 else "N/A"
+            
+            cmd = f"oc get pods -n {namespace} --no-headers | grep -c Running"
+            returncode, stdout, stderr = run_command(cmd)
+            health_info["running_pods"] = stdout.strip() if returncode == 0 else "N/A"
+            
+            # Get recent events
+            cmd = f"oc get events -n {namespace} --sort-by='.lastTimestamp' | tail -5"
+            returncode, stdout, stderr = run_command(cmd)
+            health_info["recent_events"] = stdout if returncode == 0 else "No recent events"
+            
+            return health_info
+            
+        except Exception as e:
+            return {"error": f"Cluster health check failed: {str(e)}"}
+
+    def detect_log_anomalies(logs: str) -> List[Dict]:
+        """Detect anomalies in logs"""
+        anomalies = []
+        
+        # Pattern-based anomaly detection
+        patterns = {
+            "excessive_restarts": {
+                "pattern": r"restart.*(\d+)",
+                "threshold": 5,
+                "description": "Excessive container restarts detected"
+            },
+            "repeated_errors": {
+                "pattern": r"(error|failed|exception)",
+                "threshold": 10,
+                "description": "High frequency of errors in logs"
+            },
+            "timeout_issues": {
+                "pattern": r"timeout|timed out",
+                "threshold": 3,
+                "description": "Multiple timeout issues detected"
+            },
+            "network_retries": {
+                "pattern": r"retry|retrying",
+                "threshold": 5,
+                "description": "Excessive network retries detected"
+            }
+        }
+        
+        for anomaly_type, config in patterns.items():
+            matches = re.findall(config["pattern"], logs, re.IGNORECASE)
+            if len(matches) >= config["threshold"]:
+                anomalies.append({
+                    "type": anomaly_type,
+                    "count": len(matches),
+                    "description": config["description"],
+                    "severity": "WARNING" if len(matches) < config["threshold"] * 2 else "CRITICAL"
+                })
+        
+        return anomalies
+
+    def get_enhanced_ai_analysis(pod_info: str, resource_info: Dict, cluster_health: Dict, anomalies: List[Dict], namespace: str, pod: str) -> str:
+        """Get enhanced AI analysis with all the new features"""
+        
+        # Prepare comprehensive context for AI
+        context = f"""
+        ENHANCED KUBERNETES TROUBLESHOOTING ANALYSIS
+        
+        Pod: {namespace}/{pod}
+        
+        RESOURCE ANALYSIS:
+        {json.dumps(resource_info, indent=2)}
+        
+        CLUSTER HEALTH:
+        {json.dumps(cluster_health, indent=2)}
+        
+        DETECTED ANOMALIES:
+        {json.dumps(anomalies, indent=2)}
+        
+        POD INFORMATION AND LOGS:
+        {pod_info}
+        
+        Please provide a comprehensive analysis including:
+        1. SEVERITY CLASSIFICATION (CRITICAL/WARNING/INFO/SUCCESS)
+        2. ROOT CAUSE ANALYSIS with specific technical details
+        3. STEP-BY-STEP REMEDIATION GUIDE with exact commands
+        4. RESOURCE OPTIMIZATION RECOMMENDATIONS
+        5. PREVENTIVE MEASURES for similar issues
+        6. CLUSTER-WIDE IMPACT ASSESSMENT
+        7. TIMELINE of events leading to the issue
+        
+        Format your response with clear sections and actionable insights.
+        Use markdown formatting for better readability.
+        """
+        
+        try:
+            headers = {
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": GROQ_MODEL,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert Kubernetes and OpenShift troubleshooter with deep knowledge of container orchestration, resource management, and observability. Provide detailed, actionable insights with specific technical solutions."
+                    },
+                    {
+                        "role": "user",
+                        "content": context
+                    }
+                ],
+                "max_tokens": 2000,
+                "temperature": 0.1
+            }
+            
+            response = requests.post(GROQ_ENDPOINT, headers=headers, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result["choices"][0]["message"]["content"]
+            else:
+                return f"AI Analysis Error: {response.status_code} - {response.text}"
+                
+        except Exception as e:
+            return f"AI Analysis failed: {str(e)}"
+
+    def create_timeline_visualization(events: str) -> List[Dict]:
+        """Create timeline from events"""
+        timeline = []
+        
+        # Parse events and create timeline items
+        lines = events.split('\n')
+        for line in lines[1:]:  # Skip header
+            if line.strip():
+                parts = line.split()
+                if len(parts) >= 6:
+                    timeline.append({
+                        "time": parts[0],
+                        "type": parts[1],
+                        "reason": parts[2],
+                        "object": parts[3],
+                        "message": " ".join(parts[4:])
+                    })
+        
+        return timeline
+
+    # Get available clusters
+    def get_available_clusters():
+        """Get available OpenShift clusters"""
+        try:
+            cmd = "oc config get-contexts --no-headers | awk '{print $2}'"
+            returncode, stdout, stderr = run_command(cmd)
+            if returncode == 0 and stdout.strip():
+                return stdout.strip().split('\n')
+            else:
+                return ["current-cluster"]
+        except:
+            return ["current-cluster"]
+
+    def get_current_cluster():
+        """Get current cluster context"""
+        try:
+            cmd = "oc config current-context"
+            returncode, stdout, stderr = run_command(cmd)
+            return stdout.strip() if returncode == 0 else "current-cluster"
+        except:
+            return "current-cluster"
+
+    def get_cluster_health_overview():
+        """Get comprehensive cluster health overview"""
+        try:
+            overview = {
+                "namespaces": [],
+                "problematic_pods": [],
+                "total_pods": 0,
+                "healthy_pods": 0,
+                "problematic_count": 0
+            }
+            
+            # Get all namespaces
+            cmd = "oc get namespaces --no-headers | awk '{print $1}'"
+            returncode, stdout, stderr = run_command(cmd)
+            if returncode == 0:
+                namespaces = stdout.strip().split('\n')
+                overview["namespaces"] = namespaces[:50]  # Limit for performance
+            
+            # Scan for problematic pods across all namespaces
+            problematic_statuses = ["Pending", "Failed", "CrashLoopBackOff", "ImagePullBackOff", "ErrImagePull", "Init:Error", "Init:CrashLoopBackOff", "Error"]
+            
+            for namespace in overview["namespaces"]:
+                if not namespace or namespace.startswith("openshift-") or namespace.startswith("kube-"):
+                    continue  # Skip system namespaces for performance
+                    
+                cmd = f"oc get pods -n {namespace} --no-headers 2>/dev/null || echo ''"
+                returncode, stdout, stderr = run_command(cmd)
+                
+                if returncode == 0 and stdout.strip():
+                    lines = stdout.strip().split('\n')
+                    for line in lines:
+                        if not line.strip():
+                            continue
+                        parts = line.split()
+                        if len(parts) >= 3:
+                            pod_name = parts[0]
+                            ready = parts[1]
+                            status = parts[2]
+                            
+                            overview["total_pods"] += 1
+                            
+                            # Check if pod is problematic
+                            is_problematic = False
+                            issue_description = ""
+                            
+                            if any(prob_status in status for prob_status in problematic_statuses):
+                                is_problematic = True
+                                if "Pending" in status:
+                                    issue_description = "Pod cannot be scheduled - check resources/constraints"
+                                elif "CrashLoopBackOff" in status:
+                                    issue_description = "Container repeatedly crashing - check logs"
+                                elif "ImagePullBackOff" in status or "ErrImagePull" in status:
+                                    issue_description = "Cannot pull container image - check registry access"
+                                elif "Init:" in status:
+                                    issue_description = "Init container failing - check dependencies"
+                                elif "Failed" in status:
+                                    issue_description = "Pod execution failed - check configuration"
+                                else:
+                                    issue_description = f"Pod in {status} state"
+                            
+                            # Check ready status for running pods
+                            elif "Running" in status and "/" in ready:
+                                ready_parts = ready.split("/")
+                                if len(ready_parts) == 2 and ready_parts[0] != ready_parts[1]:
+                                    is_problematic = True
+                                    issue_description = f"Not all containers ready ({ready}) - check readiness probes"
+                            
+                            if is_problematic:
+                                overview["problematic_pods"].append({
+                                    "name": pod_name,
+                                    "namespace": namespace,
+                                    "status": status,
+                                    "ready": ready,
+                                    "issue": issue_description,
+                                    "severity": get_issue_severity(status)
+                                })
+                                overview["problematic_count"] += 1
+                            else:
+                                overview["healthy_pods"] += 1
+            
+            # Sort problematic pods by severity
+            overview["problematic_pods"].sort(key=lambda x: x["severity"])
+            
+            return overview
+            
+        except Exception as e:
+            return {"error": f"Failed to get cluster overview: {str(e)}"}
+    
+    def get_issue_severity(status):
+        """Determine issue severity for sorting"""
+        if "Failed" in status or "CrashLoopBackOff" in status:
+            return 1  # Critical
+        elif "Pending" in status or "ImagePullBackOff" in status:
+            return 2  # High
+        elif "Init:" in status:
+            return 3  # Medium
+        else:
+            return 4  # Low
+
+    # Main Streamlit App
+    def main():
+        st.markdown('<div class="main-header"><h1>🚀 OpenShift Command Center v2.0</h1><p>Dynamic Cluster Health • AI-Powered Analysis • Automated Problem Detection</p></div>', unsafe_allow_html=True)
+        
+        # Main navigation
+        tab1, tab2 = st.tabs(["🏥 Cluster Health Overview", "🔍 Detailed Pod Analysis"])
+        
+        with tab1:
+            st.header("🏥 Cluster Health Command Center")
+            
+            # Auto-refresh button
+            col1, col2, col3 = st.columns([2, 1, 1])
+            with col1:
+                if st.button("🔄 Refresh Cluster Health", type="primary"):
+                    st.rerun()
+            with col2:
+                auto_refresh = st.checkbox("Auto-refresh (30s)")
+            with col3:
+                if auto_refresh:
+                    time.sleep(30)
+                    st.rerun()
+            
+            # Get cluster health overview
+            with st.spinner("🔍 Scanning cluster for issues..."):
+                health_overview = get_cluster_health_overview()
+            
+            if "error" in health_overview:
+                st.error(health_overview["error"])
+                return
+            
+            # Display cluster metrics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Pods", health_overview["total_pods"], delta=None)
+            with col2:
+                st.metric("Healthy Pods", health_overview["healthy_pods"], delta=None)
+            with col3:
+                st.metric("Problematic Pods", health_overview["problematic_count"], delta=None)
+            with col4:
+                health_percentage = round((health_overview["healthy_pods"] / max(health_overview["total_pods"], 1)) * 100, 1)
+                st.metric("Health Score", f"{health_percentage}%", delta=None)
+            
+            # Display problematic pods
+            if health_overview["problematic_pods"]:
+                st.markdown("---")
+                st.subheader("🚨 Problematic Pods Detected")
+                st.markdown("Click on any pod below for AI-powered analysis:")
+                
+                # Create a dataframe for better display
+                pods_data = []
+                for pod in health_overview["problematic_pods"]:
+                    severity_icon = "🔴" if pod["severity"] <= 2 else "🟡" if pod["severity"] == 3 else "🟠"
+                    pods_data.append({
+                        "🚨": severity_icon,
+                        "Pod Name": pod["name"],
+                        "Namespace": pod["namespace"],
+                        "Status": pod["status"],
+                        "Ready": pod["ready"],
+                        "Issue Description": pod["issue"]
+                    })
+                
+                # Display as interactive table
+                for i, pod_data in enumerate(pods_data):
+                    with st.container():
+                        col1, col2, col3, col4, col5 = st.columns([0.5, 2, 1.5, 1, 3])
+                        
+                        with col1:
+                            st.markdown(f"<h3>{pod_data['🚨']}</h3>", unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"**{pod_data['Pod Name']}**")
+                        with col3:
+                            st.markdown(f"`{pod_data['Namespace']}`")
+                        with col4:
+                            status_color = "#c9190b" if health_overview["problematic_pods"][i]["severity"] <= 2 else "#f0ab00"
+                            st.markdown(f"<span style='color: {status_color}; font-weight: bold;'>{pod_data['Status']}</span>", unsafe_allow_html=True)
+                        with col5:
+                            if st.button(f"🤖 Analyze", key=f"analyze_{i}", help=pod_data["Issue Description"]):
+                                # Store selected pod for analysis
+                                st.session_state.selected_pod = health_overview["problematic_pods"][i]["name"]
+                                st.session_state.selected_namespace = health_overview["problematic_pods"][i]["namespace"]
+                                st.session_state.switch_to_analysis = True
+                                st.rerun()
+                        
+                        st.markdown(f"<small style='color: #666;'>{pod_data['Issue Description']}</small>", unsafe_allow_html=True)
+                        st.markdown("---")
+            else:
+                st.success("🎉 All pods are healthy! No issues detected.")
+        
+        with tab2:
+            st.header("🔍 Detailed Pod Analysis")
+            
+            # Check if we need to switch to analysis tab
+            if st.session_state.get("switch_to_analysis", False):
+                st.session_state.switch_to_analysis = False
+                selected_pod = st.session_state.get("selected_pod")
+                selected_namespace = st.session_state.get("selected_namespace")
+                
+                if selected_pod and selected_namespace:
+                    st.info(f"🎯 Analyzing: **{selected_pod}** in namespace **{selected_namespace}**")
+            else:
+                selected_pod = None
+                selected_namespace = None
+        
+            # Sidebar for manual pod selection
+            with st.sidebar:
+                st.header("🔧 Manual Pod Selection")
+                
+                # Get available clusters
+                clusters = get_available_clusters()
+                current_cluster = get_current_cluster()
+                
+                if current_cluster in clusters:
+                    default_index = clusters.index(current_cluster)
+                else:
+                    default_index = 0
+                    
+                selected_cluster = st.selectbox("🌐 Select Cluster", clusters, index=default_index)
+                
+                # Show cluster info
+                st.markdown(f"""
+                <div class="severity-info">
+                    <strong>📊 Current Context:</strong><br>
+                    {selected_cluster}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Manual namespace/pod selection (only if not coming from overview)
+                if not st.session_state.get("selected_pod"):
+                    # Get namespaces - prioritize test-problematic-pods
+                    cmd = "oc get namespaces --no-headers | awk '{print $1}'"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        all_namespaces = stdout.strip().split('\n')
+                        # Prioritize test-problematic-pods and other important namespaces
+                        priority_namespaces = ["test-problematic-pods", "default", "ai-troubleshooter", "ai-troubleshooter-v2", "korrel8r"]
+                        namespaces = []
+                        
+                        # Add priority namespaces first (if they exist)
+                        for priority_ns in priority_namespaces:
+                            if priority_ns in all_namespaces:
+                                namespaces.append(priority_ns)
+                        
+                        # Add remaining namespaces (up to 50 total)
+                        for ns in all_namespaces:
+                            if ns not in namespaces and len(namespaces) < 50:
+                                namespaces.append(ns)
+                    else:
+                        namespaces = ["default"]
+                    
+                    manual_namespace = st.selectbox("📁 Select Namespace", namespaces)
+                    
+                    if manual_namespace:
+                        # Get pods
+                        cmd = f"oc get pods -n {manual_namespace} --no-headers | awk '{{print $1}}'"
+                        returncode, stdout, stderr = run_command(cmd)
+                        pods = stdout.strip().split('\n') if returncode == 0 and stdout.strip() else []
+                        
+                        if pods and pods[0]:  # Check if pods list is not empty and first element is not empty
+                            manual_pod = st.selectbox("🔍 Select Pod", pods)
+                            if manual_pod:
+                                selected_pod = manual_pod
+                                selected_namespace = manual_namespace
+                        else:
+                            st.warning("No pods found in this namespace")
+                    
+                # Analysis options
+                st.markdown("---")
+                st.subheader("🎛️ Analysis Options")
+                
+                include_anomaly_detection = st.checkbox("🔍 Anomaly Detection", value=True)
+                include_resource_analysis = st.checkbox("📊 Resource Analysis", value=True)
+                include_cluster_health = st.checkbox("🏥 Cluster Health", value=True)
+                detailed_timeline = st.checkbox("📅 Detailed Timeline", value=True)
+        
+        # Main analysis section
+        if selected_pod and selected_namespace:
+            if st.button("🚀 Run Enhanced Analysis", type="primary", use_container_width=True):
+                # Progress tracking
+                progress_container = st.container()
+                
+                with progress_container:
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    # Step 1: Basic pod analysis
+                    status_text.info("📊 Gathering pod information...")
+                    progress_bar.progress(10)
+                    
+                    cmd = f"oc describe pod {selected_pod} -n {selected_namespace}"
+                    returncode, stdout, stderr = run_command(cmd)
+                    pod_info = stdout if returncode == 0 else f"Error: {stderr}"
+                    
+                    progress_bar.progress(25)
+                    
+                    # Step 2: Resource analysis
+                    resource_info = {}
+                    if include_resource_analysis:
+                        status_text.info("💾 Analyzing resource consumption...")
+                        resource_info = analyze_resource_consumption(selected_namespace, selected_pod)
+                        progress_bar.progress(40)
+                    
+                    # Step 3: Cluster health
+                    cluster_health = {}
+                    if include_cluster_health:
+                        status_text.info("🏥 Checking cluster health...")
+                        cluster_health = get_cluster_health(selected_namespace)
+                        progress_bar.progress(55)
+                    
+                    # Step 4: Get logs for anomaly detection
+                    anomalies = []
+                    if include_anomaly_detection:
+                        status_text.info("🔍 Detecting log anomalies...")
+                        cmd = f"oc logs {selected_pod} -n {selected_namespace} --tail=200 2>/dev/null || echo 'No logs available'"
+                        returncode, logs, stderr = run_command(cmd)
+                        anomalies = detect_log_anomalies(logs)
+                        progress_bar.progress(70)
+                    
+                    # Step 5: AI Analysis
+                    status_text.info("🤖 Running enhanced AI analysis...")
+                    ai_analysis = get_enhanced_ai_analysis(pod_info, resource_info, cluster_health, anomalies, selected_namespace, selected_pod)
+                    progress_bar.progress(90)
+                    
+                    # Step 6: Timeline
+                    timeline_events = []
+                    if detailed_timeline:
+                        status_text.info("📅 Building event timeline...")
+                        cmd = f"oc get events -n {selected_namespace} --field-selector involvedObject.name={selected_pod} --sort-by='.lastTimestamp'"
+                        returncode, events, stderr = run_command(cmd)
+                        if returncode == 0 and events.strip():
+                            timeline_events = create_timeline_visualization(events)
+                    
+                    progress_bar.progress(100)
+                    status_text.success("✅ Enhanced analysis complete!")
+                    time.sleep(1)
+                    
+                    # Clear progress indicators
+                    progress_bar.empty()
+                    status_text.empty()
+                
+                # Display results in enhanced tabs - exactly like v1
+                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+                    "📋 Step 1: Pod Information",
+                    "📋 Step 2: Pod Events", 
+                    "📋 Step 3: Pod Status",
+                    "📋 Step 4: Storage Check (PVC Issues)",
+                    "📋 Step 5: Node Availability",
+                    "📋 Step 6: Korrel8r Log Domain Check"
+                ])
+                
+                with tab1:
+                    st.header("📋 Step 1: Pod Information")
+                    st.markdown("**Pod Description:**")
+                    cmd = f"oc describe pod {selected_pod} -n {selected_namespace}"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0:
+                        st.code(stdout, language="text")
+                    else:
+                        st.error(f"Error: {stderr}")
+                
+                with tab2:
+                    st.header("📋 Step 2: Pod Events")
+                    st.markdown("**Recent Pod Events:**")
+                    cmd = f"oc get events -n {selected_namespace} --field-selector involvedObject.name={selected_pod} --sort-by='.lastTimestamp'"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        st.code(stdout, language="text")
+                    else:
+                        st.info("No events found for this pod")
+                
+                with tab3:
+                    st.header("📋 Step 3: Pod Status")
+                    st.markdown("**Pod Conditions and Status:**")
+                    cmd = f"oc get pod {selected_pod} -n {selected_namespace} -o yaml | grep -A 20 'conditions:'"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0:
+                        st.code(stdout, language="yaml")
+                    else:
+                        st.error(f"Error: {stderr}")
+                
+                with tab4:
+                    st.header("📋 Step 4: Storage Check (PVC Issues)")
+                    st.markdown("**Persistent Volume Claims:**")
+                    cmd = f"oc get pvc -n {selected_namespace}"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        st.code(stdout, language="text")
+                    else:
+                        st.info("No PVCs found in this namespace")
+                    
+                    # Also check if pod has volume mounts
+                    st.markdown("**Pod Volume Information:**")
+                    cmd = f"oc describe pod {selected_pod} -n {selected_namespace} | grep -A 10 -B 5 -i volume"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        st.code(stdout, language="text")
+                    else:
+                        st.info("No volume information found")
+                
+                with tab5:
+                    st.header("📋 Step 5: Node Availability")
+                    st.markdown("**Node Information:**")
+                    cmd = "oc get nodes -o wide"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0:
+                        st.code(stdout, language="text")
+                    else:
+                        st.error(f"Error: {stderr}")
+                    
+                    # Check which node the pod is running on
+                    st.markdown("**Pod Node Assignment:**")
+                    cmd = f"oc get pod {selected_pod} -n {selected_namespace} -o jsonpath='{{.spec.nodeName}}'"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        st.info(f"Pod is scheduled on node: **{stdout.strip()}**")
+                        
+                        # Get node details
+                        cmd = f"oc describe node {stdout.strip()}"
+                        returncode, node_info, stderr = run_command(cmd)
+                        if returncode == 0:
+                            st.markdown("**Node Details:**")
+                            st.code(node_info, language="text")
+                    else:
+                        st.warning("Pod not scheduled to any node")
+                
+                with tab6:
+                    st.header("📋 Step 6: Korrel8r Log Domain Check")
+                    st.markdown("**Korrel8r API Status:**")
+                    
+                    # Check Korrel8r connectivity
+                    korrel8r_url = "https://korrel8r-korrel8r.apps.rosa.loki123.orwi.p3.openshiftapps.com"
+                    cmd = f"curl -k -s {korrel8r_url}/api/v1alpha1/domains/log/classes"
+                    returncode, stdout, stderr = run_command(cmd)
+                    
+                    if returncode == 0:
+                        try:
+                            import json
+                            result = json.loads(stdout)
+                            st.success("✅ Korrel8r API accessible")
+                            st.json(result)
+                        except:
+                            st.code(stdout, language="text")
+                    else:
+                        st.error("❌ Korrel8r API not accessible")
+                        st.code(stderr, language="text")
+                    
+                    # Check Vector logging pods
+                    st.markdown("**Vector/Logging Pods Status:**")
+                    cmd = "oc get pods -n openshift-logging | grep -E '(vector|logging)'"
+                    returncode, stdout, stderr = run_command(cmd)
+                    if returncode == 0 and stdout.strip():
+                        st.code(stdout, language="text")
+                    else:
+                        st.info("No vector/logging pods found")
+                
+                # Analysis Summary (like v1 has)
+                with st.expander("🎯 ANALYSIS SUMMARY"):
+                    st.markdown(f"""
+                    <div class="severity-info">
+                        <h3>📋 Comprehensive Analysis of Pod '{selected_pod}' in Namespace '{selected_namespace}'</h3>
+                        <p><strong>Analysis Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                        <p><strong>AI Model:</strong> Groq LLaMA-3.3-70B Versatile</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Display the AI analysis directly - same as v1
+                    if ai_analysis and ai_analysis != "AI Analysis failed: API key not configured":
+                        st.markdown(ai_analysis)
+                    else:
+                        st.markdown("""
+                        <div class="remediation-step">
+                            <h4>🔍 Pod Analysis</h4>
+                            <p>Analyzing pod status and providing recommendations...</p>
+                            
+                            <h5>📊 Basic Information:</h5>
+                            <ul>
+                                <li><strong>Pod Name:</strong> {}</li>
+                                <li><strong>Namespace:</strong> {}</li>
+                                <li><strong>Status:</strong> Check the pod status using <code>oc get pod {} -n {}</code></li>
+                            </ul>
+                            
+                            <h5>🔧 Quick Troubleshooting Commands:</h5>
+                            <ol>
+                                <li><strong>Check pod details:</strong><br>
+                                    <code>oc describe pod {} -n {}</code></li>
+                                <li><strong>View pod logs:</strong><br>
+                                    <code>oc logs {} -n {} -f</code></li>
+                                <li><strong>Check events:</strong><br>
+                                    <code>oc get events -n {} --sort-by='.lastTimestamp'</code></li>
+                                <li><strong>Check pod YAML:</strong><br>
+                                    <code>oc get pod {} -n {} -o yaml</code></li>
+                            </ol>
+                            
+                            <h5>💡 Common Issues & Solutions:</h5>
+                            <ul>
+                                <li><strong>ImagePullBackOff:</strong> Check image name, registry access, and pull secrets</li>
+                                <li><strong>CrashLoopBackOff:</strong> Check container logs and resource limits</li>
+                                <li><strong>Pending:</strong> Check node resources, taints, and scheduling constraints</li>
+                                <li><strong>Init Container Issues:</strong> Check init container logs and dependencies</li>
+                            </ul>
+                        </div>
+                        """.format(selected_pod, selected_namespace, selected_pod, selected_namespace, 
+                                 selected_pod, selected_namespace, selected_pod, selected_namespace, 
+                                 selected_namespace, selected_pod, selected_namespace), unsafe_allow_html=True)
+        else:
+            # Welcome screen
+            st.markdown("""
+            <div class="severity-info">
+                <h3>👋 Welcome to Enhanced AI OpenShift Troubleshooter v2.0</h3>
+                <p>This advanced troubleshooting tool provides:</p>
+                <ul>
+                    <li><strong>🎯 AI-Powered Analysis</strong> - Intelligent root cause detection</li>
+                    <li><strong>📊 Resource Monitoring</strong> - Comprehensive resource analysis</li>
+                    <li><strong>⚠️ Anomaly Detection</strong> - Pattern recognition in logs</li>
+                    <li><strong>🏥 Cluster Health</strong> - Cluster-wide health correlation</li>
+                    <li><strong>📅 Event Timeline</strong> - Visual timeline of events</li>
+                    <li><strong>🔧 Step-by-Step Remediation</strong> - Actionable fix guidance</li>
+                </ul>
+                <p><strong>To get started:</strong> Select a cluster, namespace, and pod from the sidebar, then click "Run Enhanced Analysis"</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: groq-api-secret
+  namespace: ai-troubleshooter-v2
+type: Opaque
+stringData:
+  GROQ_API_KEY: "YOUR_GROQ_API_KEY_HERE"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-troubleshooter-gui-v2
+  namespace: ai-troubleshooter-v2
+  labels:
+    app: ai-troubleshooter-gui-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-troubleshooter-gui-v2
+  template:
+    metadata:
+      labels:
+        app: ai-troubleshooter-gui-v2
+    spec:
+      serviceAccountName: ai-troubleshooter-sa-v2
+      containers:
+      - name: streamlit-app
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8501
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: groq-api-secret
+              key: GROQ_API_KEY
+        - name: STREAMLIT_SERVER_PORT
+          value: "8501"
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - |
+            # Install system dependencies
+            apt-get update && apt-get install -y curl wget
+            
+            # Download and install oc CLI
+            wget -q https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
+            tar -xzf openshift-client-linux.tar.gz
+            mv oc /usr/local/bin/
+            chmod +x /usr/local/bin/oc
+            
+            # Install Python dependencies
+            pip install streamlit requests pandas
+            
+            # Copy application file
+            cp /app/ai-enhanced-troubleshooter-v2.py /tmp/app.py
+            
+            # Run Streamlit
+            streamlit run /tmp/app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+            
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: app-code
+        configMap:
+          name: ai-troubleshooter-app-v2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-troubleshooter-gui-v2
+  namespace: ai-troubleshooter-v2
+  labels:
+    app: ai-troubleshooter-gui-v2
+spec:
+  selector:
+    app: ai-troubleshooter-gui-v2
+  ports:
+  - name: streamlit
+    port: 8501
+    targetPort: 8501
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ai-troubleshooter-gui-v2
+  namespace: ai-troubleshooter-v2
+  labels:
+    app: ai-troubleshooter-gui-v2
+spec:
+  to:
+    kind: Service
+    name: ai-troubleshooter-gui-v2
+  port:
+    targetPort: streamlit
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

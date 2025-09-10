@@ -27,55 +27,77 @@ GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"
 GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
-# Custom CSS for better styling
+# Custom CSS with OpenShift color scheme for better readability
 st.markdown("""
 <style>
     .main-header {
-        background: linear-gradient(90deg, #1f4e79, #2d5aa0);
+        background: linear-gradient(90deg, #0066cc, #004080);
         color: white;
         padding: 1rem;
-        border-radius: 10px;
+        border-radius: 8px;
         text-align: center;
         margin-bottom: 2rem;
+        border: 1px solid #0066cc;
     }
     .ai-analysis-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background-color: #ffffff !important;
+        color: #151515 !important;
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 8px;
         margin: 1rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #d2d2d2;
+        border-left: 4px solid #0066cc;
+    }
+    .ai-analysis-box * {
+        color: #151515 !important;
+    }
+    .ai-analysis-box strong {
+        color: #151515 !important;
     }
     .analysis-box {
-        background-color: #f0f2f6;
+        background-color: #f5f5f5;
+        color: #151515;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #1f4e79;
+        border-left: 4px solid #0066cc;
         margin: 1rem 0;
+        border: 1px solid #d2d2d2;
     }
     .error-box {
-        background-color: #ffeaea;
+        background-color: #fdf2f2;
+        color: #721c24;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #d32f2f;
+        border-left: 4px solid #c9190b;
         margin: 1rem 0;
+        border: 1px solid #c9190b;
     }
     .success-box {
-        background-color: #e8f5e8;
+        background-color: #f3faf3 !important;
+        color: #1e4f18 !important;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #2e7d32;
+        border-left: 4px solid #3e8635;
         margin: 1rem 0;
+        border: 1px solid #3e8635;
+    }
+    .success-box * {
+        color: #1e4f18 !important;
+    }
+    .success-box strong {
+        color: #1e4f18 !important;
     }
     .step-header {
-        background-color: #1f4e79;
+        background-color: #0066cc;
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
         margin-top: 1rem;
+        font-weight: 600;
     }
     .ai-badge {
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        background: linear-gradient(45deg, #0066cc, #004080);
         color: white;
         padding: 0.3rem 0.8rem;
         border-radius: 20px;
@@ -83,20 +105,33 @@ st.markdown("""
         font-weight: bold;
     }
     .cluster-info {
-        background-color: #f8f9fa;
-        padding: 0.8rem;
+        background-color: #f0f8ff !important;
+        color: #151515 !important;
+        padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #28a745;
+        border-left: 4px solid #0066cc;
         margin: 0.5rem 0;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        border: 1px solid #0066cc;
+    }
+    .cluster-info strong {
+        color: #151515 !important;
+    }
+    .cluster-info * {
+        color: #151515 !important;
     }
     .cluster-switch-btn {
-        background: linear-gradient(45deg, #007bff, #0056b3);
+        background: linear-gradient(45deg, #0066cc, #004080);
         color: white;
         border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
         width: 100%;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .cluster-switch-btn:hover {
+        background: linear-gradient(45deg, #004080, #003366);
     }
 </style>
 """, unsafe_allow_html=True)
