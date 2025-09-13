@@ -61,3 +61,5 @@ oc apply -f v3.2-admin-focused-deployment.yaml
 2. **"v3.2 gives you a senior engineer"** - Immediate actions, production context
 3. **"v3.2 knows your setup"** - Uses your actual alerting rules
 4. **"v3.2 saves time"** - From minutes to seconds for actionable insights
+
+
